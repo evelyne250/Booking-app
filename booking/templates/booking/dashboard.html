@@ -1,0 +1,89 @@
+<!-- booking/templates/booking/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 45%;
+            display: inline-block;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard</h1>
+
+    <h2>Recent Bookings</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Branch</th>
+                <th>Service</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in recent_bookings %}
+            <tr>
+                <td>{{ booking.name }}</td>
+                <td>{{ booking.email }}</td>
+                <td>{{ booking.branch.name }}</td>
+                <td>{{ booking.service.name }}</td>
+                <td>{{ booking.date }}</td>
+                <td>{{ booking.time }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="chart-container">
+        <h3>Bookings by Branch</h3>
+        <canvas id="branchChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <h3>Bookings by Service</h3>
+        <canvas id="serviceChart"></canvas>
+    </div>
+
+    <script>
+        const branchData = {
+            labels: {{ branch_names|safe }},
+            datasets: [{
+                label: 'Bookings by Branch',
+                data: {{ branch_counts|safe }},
+                backgroundColor: 'rgba(75, 192, 192, 0.6)'
+            }]
+        };
+    
+        const serviceData = {
+            labels: {{ service_names|safe }},
+            datasets: [{
+                label: 'Bookings by Service',
+                data: {{ service_counts|safe }},
+                backgroundColor: 'rgba(153, 102, 255, 0.6)'
+            }]
+        };
+    
+        new Chart(document.getElementById('branchChart'), {
+            type: 'bar',
+            data: branchData,
+            options: { responsive: true }
+        });
+    
+        new Chart(document.getElementById('serviceChart'), {
+            type: 'pie',
+            data: serviceData,
+            options: { responsive: true }
+        });
+    </script>
+    
+
+    
+</body>
+</html>

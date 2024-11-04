@@ -1,0 +1,26 @@
+# booking/models.py
+from django.db import models
+
+class Branch(models.Model):
+    name = models.CharField(max_length=100)
+    location = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+
+class Service(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Booking(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    date = models.DateField()
+    time = models.TimeField()
+
+    def __str__(self):
+        return f"{self.branch} - {self.service} at {self.date} {self.time}"
