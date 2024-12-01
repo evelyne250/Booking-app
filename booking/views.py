@@ -17,6 +17,9 @@ def book_appointment(request):
 def confirm(request):
     return render(request, 'booking/confirm.html')
 
+def home(request):
+    return render(request, 'booking/home.html')
+
 def dashboard(request):
     # Count bookings by branch
     bookings_by_branch = Booking.objects.values('branch__name').annotate(count=Count('id'))
@@ -40,3 +43,9 @@ def dashboard(request):
     }
 
     return render(request, 'booking/dashboard.html', context)
+
+def dashboard_view(request):
+    total_bookings = Booking.objects.count()  # Counts all booking records
+    
+    # Pass total_bookings to your template context
+    return render(request, 'booking/dashboard.html', {'total_bookings': total_bookings})
