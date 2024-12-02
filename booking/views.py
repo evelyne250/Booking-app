@@ -1,8 +1,9 @@
 # booking/views.py
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .forms import BookingForm
 from django.db.models import Count
-from .models import Booking
+from .models import Booking, Branch, Service
 
 def book_appointment(request):
     if request.method == 'POST':
@@ -19,6 +20,14 @@ def confirm(request):
 
 def home(request):
     return render(request, 'booking/home.html')
+
+def fetch_branches(request):
+    branches = Branch.objects.values('id', 'name', 'location')
+    return JsonResponse(list(branches), safe=False)
+
+def fetch_services(request):
+    services = Service.objects.values('id', 'name', 'description')
+    return JsonResponse(list(services), safe=False)
 
 def dashboard(request):
     # Count bookings by branch
