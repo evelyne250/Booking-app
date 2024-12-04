@@ -1,4 +1,5 @@
 # booking/views.py
+import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .forms import BookingForm
@@ -16,6 +17,46 @@ def book_appointment(request):
     return render(request, 'booking/index.html', {'form': form})
 
 def confirm(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            form_data = {
+                'name': data.get('name'),
+                'email': data.get('email'),
+                'branch': data.get('branch'),
+                'service': data.get('service'),
+                'date': data.get('date'),
+                'time': data.get('time'),
+                'customer_type': data.get('customer_type')
+            }
+            
+            form = BookingForm(form_data)
+            
+            if form.is_valid():
+                booking = form.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Booking confirmed',
+                    'booking_id': booking.id
+                }, status=200)
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'errors': form.errors
+                }, status=400)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Invalid JSON'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=500)
     return render(request, 'booking/confirm.html')
 
 def home(request):
