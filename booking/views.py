@@ -2,9 +2,12 @@
 import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+import requests
 from .forms import BookingForm
 from django.db.models import Count
 from .models import Booking, Branch, Service
+from django.conf import settings
+from django.db.models import Q
 
 def book_appointment(request):
     if request.method == 'POST':
@@ -99,3 +102,62 @@ def dashboard_view(request):
     
     # Pass total_bookings to your template context
     return render(request, 'booking/dashboard.html', {'total_bookings': total_bookings})
+
+def fetch_nearby_banks(request):
+    latitude = request.GET.get('latitude')
+    longitude = request.GET.get('longitude')
+
+    if not latitude or not longitude:
+        return JsonResponse({
+       
+            'status': 'error',
+            'message': 'Latitude and longitude are required'
+        }, status=400)
+    
+    branches = Branch.objects.filter(
+        Q(name__icontains='Bank of Kigali') | 
+        Q(name__icontains='BK')
+    )
+
+    nearest_branch = None
+    min_distance = float('inf')
+    user_location = (float(latitude), float(longitude))
+        
+    try:
+        api_key = settings.GOOGLE_API_KEY
+        url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+        
+        params = {
+            'location': f'{latitude},{longitude}',
+            'radius': 5000,
+            'type': 'bank',
+            'keyword': 'Bank of Kigali',
+            'key': api_key
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        # Filter and process results
+        results = data.get('results', [])
+        processed_results = []
+        
+        for result in results:
+            processed_results.append({
+                'name': result.get('name'),
+                'vicinity': result.get('vicinity'),
+                'place_id': result.get('place_id'),
+                'rating': result.get('rating'),
+                'total_ratings': result.get('user_ratings_total')
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'results': processed_results
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
