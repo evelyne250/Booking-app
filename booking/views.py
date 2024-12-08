@@ -1,9 +1,13 @@
 # booking/views.py
+import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+import requests
 from .forms import BookingForm
 from django.db.models import Count
 from .models import Booking, Branch, Service
+from django.conf import settings
+from django.db.models import Q
 
 def book_appointment(request):
     if request.method == 'POST':
@@ -16,6 +20,46 @@ def book_appointment(request):
     return render(request, 'booking/index.html', {'form': form})
 
 def confirm(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            form_data = {
+                'name': data.get('name'),
+                'email': data.get('email'),
+                'branch': data.get('branch'),
+                'service': data.get('service'),
+                'date': data.get('date'),
+                'time': data.get('time'),
+                'customer_type': data.get('customer_type')
+            }
+            
+            form = BookingForm(form_data)
+            
+            if form.is_valid():
+                booking = form.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Booking confirmed',
+                    'booking_id': booking.id
+                }, status=200)
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'errors': form.errors
+                }, status=400)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Invalid JSON'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error', 
+                'message': str(e)
+            }, status=500)
     return render(request, 'booking/confirm.html')
 
 def home(request):
@@ -58,3 +102,62 @@ def dashboard_view(request):
     
     # Pass total_bookings to your template context
     return render(request, 'booking/dashboard.html', {'total_bookings': total_bookings})
+
+def fetch_nearby_banks(request):
+    latitude = request.GET.get('latitude')
+    longitude = request.GET.get('longitude')
+
+    if not latitude or not longitude:
+        return JsonResponse({
+       
+            'status': 'error',
+            'message': 'Latitude and longitude are required'
+        }, status=400)
+    
+    branches = Branch.objects.filter(
+        Q(name__icontains='Bank of Kigali') | 
+        Q(name__icontains='BK')
+    )
+
+    nearest_branch = None
+    min_distance = float('inf')
+    user_location = (float(latitude), float(longitude))
+        
+    try:
+        api_key = settings.GOOGLE_API_KEY
+        url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+        
+        params = {
+            'location': f'{latitude},{longitude}',
+            'radius': 5000,
+            'type': 'bank',
+            'keyword': 'Bank of Kigali',
+            'key': api_key
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        # Filter and process results
+        results = data.get('results', [])
+        processed_results = []
+        
+        for result in results:
+            processed_results.append({
+                'name': result.get('name'),
+                'vicinity': result.get('vicinity'),
+                'place_id': result.get('place_id'),
+                'rating': result.get('rating'),
+                'total_ratings': result.get('user_ratings_total')
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'results': processed_results
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

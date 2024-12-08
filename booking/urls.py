@@ -8,6 +8,7 @@ urlpatterns = [
     path('confirm/', views.confirm, name='confirm'),
     path('branches/', views.fetch_branches, name='fetch_branches'),
     path('services/', views.fetch_services, name='fetch_services'),
+    path('nearby-banks/', views.fetch_nearby_banks, name='nearby_banks'),
     path('dashboard/', views.dashboard, name='dashboard'),  # New dashboard route
 
 ]

@@ -5,14 +5,19 @@ from datetime import datetime, timedelta
 from .models import Booking, Branch, Service
 
 class BookingForm(forms.ModelForm):
+    CUSTOMER_TYPE_CHOICES = [
+        ('new-customer', 'New Customer'),
+        ('existing-customer', 'Existing Customer'),
+    ]
     branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True)
     service = forms.ModelChoiceField(queryset=Service.objects.all(), required=True)
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), required=True)
+    customer_type = forms.ChoiceField(choices=CUSTOMER_TYPE_CHOICES, required=True)
 
     class Meta:
         model = Booking
-        fields = ['name', 'email', 'branch', 'service', 'date', 'time']
+        fields = ['name', 'email', 'branch', 'service', 'date', 'time', 'customer_type']
 
     def clean(self):
         cleaned_data = super().clean()
