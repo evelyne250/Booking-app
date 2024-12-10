@@ -161,3 +161,16 @@ def fetch_nearby_banks(request):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+def search_branches(request):
+    search_term = request.GET.get('q', '').strip()  # Get 'q' parameter from request
+    if search_term:
+        branches = Branch.objects.filter(name__icontains=search_term)
+    else:
+        branches = Branch.objects.all()  # Return all branches if no search term provided
+
+    results = [
+        {'id': branch.id, 'name': branch.name, 'location': branch.location}
+        for branch in branches
+    ]
+    return JsonResponse({'status': 'success', 'results': results})

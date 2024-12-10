@@ -1,6 +1,8 @@
 # booking/urls.py
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.book_appointment, name='book_appointment'),
@@ -10,5 +12,10 @@ urlpatterns = [
     path('services/', views.fetch_services, name='fetch_services'),
     path('nearby-banks/', views.fetch_nearby_banks, name='nearby_banks'),
     path('dashboard/', views.dashboard, name='dashboard'),  # New dashboard route
+    path('api/search-branches/', views.search_branches, name='search_branches'),
+
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -111,6 +111,7 @@
                     <th>Service</th>
                     <th>Date</th>
                     <th>Time</th>
+                    <th>Customer type</th>
                 </tr>
             </thead>
             <tbody>
@@ -123,6 +124,7 @@
                     <td>{{ booking.service.name }}</td>
                     <td>{{ booking.date }}</td>
                     <td>{{ booking.time }}</td>
+                    <td>{{ booking.customer_type }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -150,7 +152,7 @@
             datasets: [{
                 label: 'Bookings by Branch',
                 data: {{ branch_counts|safe }},
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                backgroundColor: 'rgba(0, 81, 164, 0.9490196078)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1
             }]
@@ -162,13 +164,18 @@
                 label: 'Bookings by Service',
                 data: {{ service_counts|safe }},
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
-                    'rgba(255, 206, 86, 0.6)',
-                    'rgba(75, 192, 192, 0.6)',
-                    'rgba(153, 102, 255, 0.6)'
+                'rgba(255, 184, 184, 0.6)',
+                'rgba(135, 206, 250, 0.6)',
+                'rgba(255, 239, 140, 0.6)',
+                'rgba(170, 240, 209, 0.6)',
+                'rgba(230, 230, 250, 0.6)'
+                    // 'rgba(255, 99, 132, 0.6)',
+                    // 'rgba(54, 162, 235, 0.6)',
+                    // 'rgba(255, 206, 86, 0.6)',
+                    // 'rgba(75, 192, 192, 0.6)',
+                    // 'rgba(153, 102, 255, 0.6)'
                 ],
-                borderColor: 'rgba(153, 102, 255, 1)',
+                borderColor: 'rgba(0, 81, 164, 0.9490196078)',
                 borderWidth: 1
             }]
         };
