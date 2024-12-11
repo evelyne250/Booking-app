@@ -28,6 +28,7 @@ def confirm(request):
                 'name': data.get('name'),
                 'email': data.get('email'),
                 'branch': data.get('branch'),
+                'manual_branch': data.get('manual_branch', ''),
                 'service': data.get('service'),
                 'date': data.get('date'),
                 'time': data.get('time'),
