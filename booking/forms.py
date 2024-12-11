@@ -3,13 +3,20 @@ from django import forms
 from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import Booking, Branch, Service
+from django.db.models import Q
 
 class BookingForm(forms.ModelForm):
     CUSTOMER_TYPE_CHOICES = [
         ('new-customer', 'New Customer'),
         ('existing-customer', 'Existing Customer'),
     ]
-    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=True)
+    branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=False)
+    manual_branch = forms.CharField(
+        max_length=100, 
+        required=False,
+        label='Branch Name/Location'
+    )
+    
     service = forms.ModelChoiceField(queryset=Service.objects.all(), required=True)
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), required=True)
@@ -22,11 +29,18 @@ class BookingForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         branch = cleaned_data.get("branch")
+        manual_branch = cleaned_data.get("manual_branch")
         service = cleaned_data.get("service")
         date = cleaned_data.get("date")
         time = cleaned_data.get("time")
 
-        if branch and service and date and time:
+        if not branch and not manual_branch:
+            raise forms.ValidationError("Please select a branch or enter a branch name.")
+        
+        if branch and manual_branch:
+            cleaned_data['branch'] = None
+
+        if (branch or manual_branch) and service and date and time:
             # Check if there is a recent booking within 6 minutes
             booking_datetime = timezone.make_aware(
                 datetime.combine(date, time)
@@ -34,7 +48,7 @@ class BookingForm(forms.ModelForm):
             time_limit = booking_datetime - timedelta(minutes=6)
 
             recent_booking = Booking.objects.filter(
-                branch=branch,
+                Q(branch=branch) | Q(manual_branch=manual_branch),
                 service=service,
                 date=date,
                 time__gte=time_limit,
@@ -47,3 +61,19 @@ class BookingForm(forms.ModelForm):
                 )
         
         return cleaned_data
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # If no database branch is selected but manual branch is provided
+        if not instance.branch and self.cleaned_data.get('manual_branch'):
+            if self.cleaned_data.get('manual_branch'):
+                temp_branch, created = Branch.objects.get_or_create(
+                name=self.cleaned_data['manual_branch'],
+                defaults={'location': 'Unknown'}
+            )
+            instance.branch = temp_branch
+            instance.manual_branch = self.cleaned_data['manual_branch']
+        
+        if commit:
+            instance.save()
+        return instance
