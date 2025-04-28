@@ -67,12 +67,37 @@ def home(request):
     return render(request, 'booking/home.html')
 
 def fetch_branches(request):
-    branches = Branch.objects.values('id', 'name', 'location')
-    return JsonResponse(list(branches), safe=False)
+    user_type = request.GET.get('user_type', 'individual')
+    
+    if user_type == 'individual':
+        branches = Branch.objects.filter(is_for_individual=True)
+    else:
+        branches = Branch.objects.filter(is_for_business=True)
+    
+    return JsonResponse([
+        {
+            'id': branch.id, 
+            'name': branch.name, 
+            'location': branch.location
+        } for branch in branches
+    ], safe=False)
+
 
 def fetch_services(request):
-    services = Service.objects.values('id', 'name', 'description')
-    return JsonResponse(list(services), safe=False)
+    user_type = request.GET.get('user_type', 'individual')
+    
+    if user_type == 'individual':
+        services = Service.objects.filter(is_for_individual=True)
+    else:
+        services = Service.objects.filter(is_for_business=True)
+    
+    return JsonResponse([
+        {
+            'id': service.id, 
+            'name': service.name, 
+            'description': service.description
+        } for service in services
+    ], safe=False)
 
 def dashboard(request):
     # Count bookings by branch
