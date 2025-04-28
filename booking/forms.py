@@ -10,6 +10,11 @@ class BookingForm(forms.ModelForm):
         ('new-customer', 'New Customer'),
         ('existing-customer', 'Existing Customer'),
     ]
+
+    USER_TYPE_CHOICES = [
+        ('individual', 'Individual'),
+        ('business', 'Business'),
+    ]
     branch = forms.ModelChoiceField(queryset=Branch.objects.all(), required=False)
     manual_branch = forms.CharField(
         max_length=100, 
@@ -21,10 +26,19 @@ class BookingForm(forms.ModelForm):
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), required=True)
     customer_type = forms.ChoiceField(choices=CUSTOMER_TYPE_CHOICES, required=True)
+    user_type = forms.ChoiceField(
+        choices=USER_TYPE_CHOICES, 
+        required=True,
+    )
+    business_name = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label='Business Name'
+    )
 
     class Meta:
         model = Booking
-        fields = ['name', 'email', 'branch', 'service', 'date', 'time', 'customer_type']
+        fields = ['name', 'email', 'branch', 'service', 'date', 'time', 'customer_type', 'user_type', 'business_name', 'manual_branch']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -33,12 +47,22 @@ class BookingForm(forms.ModelForm):
         service = cleaned_data.get("service")
         date = cleaned_data.get("date")
         time = cleaned_data.get("time")
+        user_type = cleaned_data.get("user_type")
+        business_name = cleaned_data.get("business_name")
+
 
         if not branch and not manual_branch:
             raise forms.ValidationError("Please select a branch or enter a branch name.")
         
         if branch and manual_branch:
             cleaned_data['branch'] = None
+
+        if user_type == 'business':
+
+            if not business_name:
+                self.add_error('business_name', 'Business name is required for business bookings')
+            else:
+                cleaned_data['business_name'] = ''
 
         if (branch or manual_branch) and service and date and time:
             # Check if there is a recent booking within 6 minutes
