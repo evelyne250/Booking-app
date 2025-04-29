@@ -2,7 +2,7 @@
 from django import forms
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Booking, Branch, Service
+from .models import *
 from django.db.models import Q
 
 class BookingForm(forms.ModelForm):
@@ -101,3 +101,15 @@ class BookingForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+class CustomerSearchForm(forms.Form):
+    customer_no = forms.CharField(label='Customer Number', max_length=100)
+
+
+class CustomerUpdateForm(forms.ModelForm):
+    proof_document = forms.FileField(required=False)  # Optional file upload
+
+    class Meta:
+        model = Customer
+        fields = ['given_names', 'family_name', 'email_1', 'sms_1', 'proof_document']
