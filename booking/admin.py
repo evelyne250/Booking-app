@@ -1,14 +1,13 @@
 # booking/admin.py
 from django.contrib import admin
-from .models import Branch, Service, Booking
-
+from .models import Booking, Service, ServiceTime,Customer, Branch
 
 from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path
 from django.contrib import messages
 import csv
-from .models import Branch
+# from .models import Branch
 from django.urls import reverse
 
 @admin.register(Branch)
@@ -50,5 +49,7 @@ class BranchAdmin(admin.ModelAdmin):
         return render(request, "admin/import_data_form.html")
 
 
-admin.site.register(Service)
 admin.site.register(Booking)
+admin.site.register(Service)
+admin.site.register(ServiceTime)
+admin.site.register(Customer)

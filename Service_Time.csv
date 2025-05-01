@@ -1,13 +1,8 @@
 Service,Avrg service time (Hrs:Min:Sec)
-Domestic Transfers ,0:11:03
-Account Opening & Card ,0:00:00
-International Transfer,0:07:09
-Cheque Books,0:00:00
+Transfers,0:11:03
 Bulk,0:13:29
-Unsecured Personal Loans,0:00:00
-Secured Loans,0:00:00
 Foreign Currency,0:13:40
 Remittance (Western Union /Money Gram /Alipay),0:11:33
-Deposit,0:09:45
-Withdraw,0:07:50
+Cash Deposits,0:09:45
+Cash Withdrawal,0:07:50
 

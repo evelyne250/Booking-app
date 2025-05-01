@@ -8,9 +8,15 @@
     <link rel="stylesheet" href="{% static 'booking/style.css' %}">
 </head>
 <body>
-    <div class="container">
-        <h2 class="confirmation-message">Thank you for booking your appointment!</h2>
-        <p>Your appointment has been successfully scheduled.</p>
-    </div>
+    <h1>Booking Confirmation</h1>
+
+    <!-- Display success or warning messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: {% if message.tags == 'error' %}red{% elif message.tags == 'warning' %}orange{% else %}green{% endif %};">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
 </body>
 </html>

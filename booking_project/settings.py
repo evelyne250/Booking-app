@@ -65,12 +65,17 @@ INSTALLED_APPS = [
     'django_celery_beat',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'booking.backends.CustomAuthBackend',  # Your custom backend
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+]
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

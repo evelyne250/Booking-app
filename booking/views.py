@@ -9,22 +9,107 @@ from django.db.models import Count
 from .models import *
 from django.conf import settings
 from django.db.models import Q
-from datetime import timedelta
+from datetime import datetime, timedelta
 import re
 import csv
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from datetime import datetime
+from datetime import datetime,timedelta
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required
+from django.utils.timezone import localtime
+from .Recommendation import recommend_options  
+from django.http import JsonResponse
+
 
 def book_appointment(request):
+    recommendations = None  # Initialize recommendations
+    form = BookingForm()  # Initialize the form by default
+
     if request.method == 'POST':
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('confirm')
-    else:
-        form = BookingForm()
-    return render(request, 'booking/index.html', {'form': form})
+        # Check if the request is for recommendations or booking
+        if 'get_recommendations' in request.POST:
+            # Step 1: Fetch recommendations
+            service_name = request.POST.get('service')
+            if service_name:
+                # Retrieve the service object based on the submitted service name
+                service = Service.objects.filter(name=service_name).first()
+                if service:
+                    # Fetch recommendations for the selected service
+                    recommendations = recommend_options(service.name)
+                    # Pre-fill the form with the selected service
+                    form = BookingForm(initial={'service': service})
+                    return render(request, 'booking/index.html', {'form': form, 'recommendations': recommendations})
+        
+        elif 'book_slot' in request.POST:
+            # Step 2: Book the slot
+            form = BookingForm(request.POST)
+            if form.is_valid():
+                booking = form.save(commit=False)
+
+                # Retrieve the ServiceTime object for the selected service
+                service_time = ServiceTime.objects.filter(service_name=booking.service.name).first()
+
+                # Get the average time or default to 6 minutes
+                if service_time and service_time.average_time:
+                    average_time = service_time.average_time
+                else:
+                    average_time = timedelta(minutes=6)
+
+                # Calculate the next available time
+                last_booking = Booking.objects.filter(branch=booking.branch).order_by('-time').first()
+                if last_booking:
+                    # Convert last_booking.time (datetime.time) to a datetime object
+                    last_booking_datetime = datetime.combine(booking.date, last_booking.time)
+                    next_available_datetime = last_booking_datetime + average_time
+
+                    # Check if the selected time is too close to the last booking
+                    selected_datetime = datetime.combine(booking.date, booking.time)
+                    if selected_datetime < next_available_datetime:
+                        # Adjust the booking time to the next available time
+                        booking.time = next_available_datetime.time()
+                        messages.warning(
+                            request,
+                            f"The selected time was too close to another booking. "
+                            f"Your service has been booked at {next_available_datetime.strftime('%I:%M %p')} instead."
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f"Your service has been booked at {selected_datetime.strftime('%I:%M %p')}."
+                        )
+                else:
+                    # If no previous bookings, use the selected time
+                    messages.success(
+                        request,
+                        f"Your service has been booked at {booking.time.strftime('%I:%M %p')}."
+                    )
+
+                booking.save()
+                # Render the index.html page with the messages
+                return render(request, 'booking/index.html', {'form': BookingForm(), 'recommendations': None})
+
+    # Render the form and recommendations (if any) for GET requests or unhandled POST requests
+    return render(request, 'booking/index.html', {'form': form, 'recommendations': recommendations})
+
+def get_recommendations(request):
+    if request.method == 'POST':
+        service_id = request.POST.get('service')  # Get the service ID
+        print(f"Service ID: {service_id}")  # Debug statement
+        if service_id:
+            # Retrieve the service object based on the ID
+            service = Service.objects.filter(id=service_id).first()
+            if service:
+                # Use the service name for recommendations
+                recommendations = recommend_options(service.name)
+                return JsonResponse({'recommendations': recommendations}, status=200)
+            else:
+                print("Service not found.")  # Debug statement
+                return JsonResponse({'error': 'Service not found.'}, status=404)
+        else:
+            print("Service ID is missing.")  # Debug statement
+            return JsonResponse({'error': 'Service ID is missing.'}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def confirm(request):
     if request.method == 'POST':
@@ -69,7 +154,8 @@ def confirm(request):
                 'message': str(e)
             }, status=500)
     return render(request, 'booking/confirm.html')
-
+    
+@login_required
 def home(request):
     return render(request, 'booking/home.html')
 
@@ -105,6 +191,33 @@ def fetch_services(request):
             'description': service.description
         } for service in services
     ], safe=False)
+
+
+def custom_login_view(request):
+    if request.method == 'POST':
+        form = CustomLoginForm(request.POST)
+        if form.is_valid():
+            full_name = form.cleaned_data['full_name']
+            account_number = form.cleaned_data['account_number']
+            phone_number = form.cleaned_data['phone_number']
+
+            # Authenticate using the custom backend
+            user = authenticate(
+                request,
+                full_name=full_name,
+                account_number=account_number,
+                phone_number=phone_number
+            )
+            if user is not None:
+                login(request, user)
+                return redirect('dashboard')  # Redirect to dashboard or any other page
+            else:
+                form.add_error(None, "Invalid credentials. Please try again.")
+    else:
+        form = CustomLoginForm()
+
+    return render(request, 'custom_login.html', {'form': form})
+
 
 def dashboard(request):
     # Count bookings by branch
