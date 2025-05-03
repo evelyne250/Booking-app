@@ -2,8 +2,17 @@
 from django import forms
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Booking, Branch, Service
+from .models import *
 from django.db.models import Q
+from django.contrib.auth.models import User
+from django.utils.timezone import make_aware
+class CustomLoginForm(forms.Form):
+    full_name = forms.CharField(max_length=200, required=True, label="Full Name")
+    account_number = forms.CharField(max_length=50, required=True, label="Account Number")
+    phone_number = forms.CharField(max_length=15, required=True, label="Phone Number")
+
+class CustomerUploadForm(forms.Form):
+    file = forms.FileField(label="Upload CSV File")
 
 class BookingForm(forms.ModelForm):
     CUSTOMER_TYPE_CHOICES = [
@@ -38,7 +47,16 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        fields = ['name', 'email', 'branch', 'service', 'date', 'time', 'customer_type', 'user_type', 'business_name', 'manual_branch']
+        fields = [ 'user_type',
+            'full_name',
+            'account_number',
+            'phone_number',
+            'branch',
+            'service',
+            'date',
+            'time',
+            'customer_type',
+            'business_name',]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -50,7 +68,6 @@ class BookingForm(forms.ModelForm):
         user_type = cleaned_data.get("user_type")
         business_name = cleaned_data.get("business_name")
 
-
         if not branch and not manual_branch:
             raise forms.ValidationError("Please select a branch or enter a branch name.")
         
@@ -58,7 +75,6 @@ class BookingForm(forms.ModelForm):
             cleaned_data['branch'] = None
 
         if user_type == 'business':
-
             if not business_name:
                 self.add_error('business_name', 'Business name is required for business bookings')
             else:
@@ -66,7 +82,7 @@ class BookingForm(forms.ModelForm):
 
         if (branch or manual_branch) and service and date and time:
             # Check if there is a recent booking within 6 minutes
-            booking_datetime = timezone.make_aware(
+            booking_datetime = make_aware(
                 datetime.combine(date, time)
             )
             time_limit = booking_datetime - timedelta(minutes=6)
@@ -80,10 +96,10 @@ class BookingForm(forms.ModelForm):
             ).exists()
 
             if recent_booking:
-                raise forms.ValidationError(
-                    "This time slot is too close to another booking. Please choose a time at least 6 minutes later."
-                )
-        
+                # Instead of raising a ValidationError, adjust the time in the view
+                cleaned_data['adjusted_time'] = True  # Add a flag to indicate adjustment
+                cleaned_data['adjusted_booking_datetime'] = booking_datetime + timedelta(minutes=6)
+
         return cleaned_data
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -101,3 +117,15 @@ class BookingForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+class CustomerSearchForm(forms.Form):
+    customer_no = forms.CharField(label='Customer Number', max_length=100)
+
+
+class CustomerUpdateForm(forms.ModelForm):
+    proof_document = forms.FileField(required=False)  # Optional file upload
+
+    class Meta:
+        model = Customer
+        fields = ['given_names', 'family_name', 'email_1', 'sms_1', 'proof_document']

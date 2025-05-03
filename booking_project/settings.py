@@ -9,16 +9,32 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+from __future__ import absolute_import, unicode_literals
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+from celery import Celery
 # Load environment variables
 load_dotenv()
 
 # Retrieve the API key
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+# Set the default Django settings module for the 'celery' program.
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'booking_project.settings')
 
+app = Celery('booking_project')
+
+# Using a string here means the worker doesn't have to serialize
+# the configuration object to child processes.
+app.config_from_object('django.conf:settings', namespace='CELERY')
+
+# Auto-discover tasks from installed apps.
+app.autodiscover_tasks()
+
+@app.task(bind=True)
+def debug_task(self):
+    print(f'Request: {self.request!r}')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -46,6 +62,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'booking',
     'corsheaders',
+    'django_celery_beat',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'booking.backends.CustomAuthBackend',  # Your custom backend
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
 ]
 
 MIDDLEWARE = [
@@ -53,7 +75,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -74,6 +96,13 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3001',
     'http://127.0.0.1:3001',
 ]
+
+# booking_project/settings.py
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0' # Adjust the port if needed
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 
 ROOT_URLCONF = 'booking_project.urls'
@@ -139,6 +168,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Static files (CSS, JavaScript, Images)

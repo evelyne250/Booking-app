@@ -6,20 +6,156 @@
     <title>Book an Appointment</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'booking/style.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .recommendations {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+        .recommendations li {
+            margin-bottom: 10px;
+        }
+        .messages {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .messages p {
+            margin: 0;
+            padding: 5px 0;
+        }
+        .messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .messages .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .form-container {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h2>Book an Appointment</h2>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            {% if form.non_field_errors %}
-                <div class="error">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
-            <button type="submit">Submit</button>
-        </form>
+        <h1>Book an Appointment</h1>
+
+        <!-- Display recommendations -->
+        <div class="recommendations" id="recommendations" style="display: none;">
+            <h2>Recommended Options</h2>
+            <ul id="recommendations-list"></ul>
+        </div>
+
+        <!-- Display success or warning messages -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <p class="{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}success{% endif %}">
+                        {{ message }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Booking form -->
+        <div class="form-container">
+            <form id="booking-form" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="button" id="get-recommendations">Get Recommendations</button>
+                <button type="submit" name="book_slot">Book Slot</button>
+            </form>
+        </div>
     </div>
+
+    <script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+$(document).ready(function () {
+    $('#get-recommendations').click(function (e) {
+        e.preventDefault();
+
+        // Get the selected service from the form
+        const service = $('#id_service').val();  // Ensure the service field has the correct ID
+
+        if (!service) {
+            alert("Please select a service.");
+            return;
+        }
+
+        // Send an AJAX request to fetch recommendations
+        $.ajax({
+            url: "{% url 'get_recommendations' %}",
+            type: "POST",
+            headers: { "X-CSRFToken": csrftoken },  // Include the CSRF token in the headers
+            data: {
+                service: service
+            },
+            success: function (response) {
+                const recommendationsList = $('#recommendations-list');
+                recommendationsList.empty();  // Clear existing recommendations
+                response.recommendations.forEach(function (recommendation) {
+                    recommendationsList.append('<li>' + recommendation + '</li>');
+                });
+                $('#recommendations').show();  // Show the recommendations section
+            },
+            error: function (xhr, status, error) {
+                alert("An error occurred while fetching recommendations.");
+            }
+        });
+    });
+});
+    </script>
 </body>
 </html>

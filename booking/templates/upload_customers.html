@@ -1,0 +1,29 @@
+<!-- templates/upload_customers.html -->
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Customers CSV</title>
+</head>
+<body>
+    <h1>Upload Customers CSV</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %};">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Select CSV File:</label><br><br>
+        <input type="file" name="file" accept=".csv" required><br><br>
+        <button type="submit">Upload</button>
+    </form>
+
+</body>
+</html>
+{% endblock %}
