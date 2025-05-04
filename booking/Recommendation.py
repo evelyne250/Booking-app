@@ -63,19 +63,18 @@ def recommend_options(service_name):
   recommendations = {
         "Cash Deposits": ["If you're looking to make a cash deposit, you can either visit your nearest BK agent or use our digital channels (USSD *334#) to transfer funds from your mobile wallet to your BK account. For cheque deposits, please proceed with booking a slot at your nearest BK branch."],
         "Cash Withdrawal": ["You can easily withdraw cash directly from your BK Mobile App — no need to wait in line or rush to the ATM. With just a few taps, you can access your cash anytime, anywhere. Here's how: \n\n- Use an ATM if the amount is less than or equal to 400,000 RWF.\n\n- Use the Mobile App or USSD (*334#) to generate a cash withdrawal passcode and collect your cash at a BK Agent.\n\n- Book a slot at your nearest BK branch for larger transactions or special services."],
-        "Bill Payment": ["Use our digital channels: Online banking, Mobile App, USSD, and Agent."],
-        "Transfers": ["Use our digital channels: Online banking, Mobile App, USSD, and Agent."],
+        "Bill Payment": ["Use our digital channels: Online banking, Mobile App, USSD, and Agent. For more details kindly follow https://bk.rw/support-and-updates/help-center"],
+        "Transfers": ["Use our digital channels: Online banking, Mobile App, USSD, and Agent. For more details kindly follow https://bk.rw/support-and-updates/help-center"],
         "Account opening": ["1. Open account using BK Mobile APP\n2. Consult BK agent\n3. Visit nearest branch"],
         "Cards": ["For card-related services such as prepaid cash loading or credit card payments, please use BK digital channels (Internet Banking, Mobile App, or USSD *334#)."],
         "KYC": ["Kindly visit any BK branch to complete the necessary physical documents for updating your address, ID, or other personal information."],
-        "Disputes and Claims": ["If you need assistance with disputes regarding transactions, fraudulent activities, or claiming funds — such as accessing a deceased relative’s account — our CRM is available to support you and ensure a prompt resolution of your request or inquiry."]
+        "Disputes and Claims": ["If you need assistance with disputes regarding transactions, fraudulent activities, or claiming funds \u2014 such as accessing a deceased relative\u2019s account \u2014 our CRM is available to support you and ensure a prompt resolution of your request or inquiry. Visit: https://bk.rw/support-and-updates/report-an-issue"]
     }
     # Normalize the service_name to match the dictionary keys
   service_name = service_name.strip().title()
   return recommendations.get(service_name, ["Visit the branch for assistance."])
   print(f"Recommendations for {service_name}: {result}")  # Debug statement
   return result
-
 # In[27]:
 
 

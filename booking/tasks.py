@@ -11,3 +11,6 @@ def adjust_slot_availability():
             slot.capacity += 1
         slot.save()
     return f"Adjusted {time_slots.count()} slots."
+
+
+ 
