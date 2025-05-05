@@ -13,6 +13,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 from celery import Celery
 # Load environment variables
@@ -48,7 +49,7 @@ SECRET_KEY = 'django-insecure-f*s9(+4=*6mp-*owuw62d=)_+a1zs-&jgqb5yy!!o7bw^=1_1k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://booking-app-062v.onrender.com', 'booking-app-062v.onrender.com']
+ALLOWED_HOSTS = ['https://booking-app-062v.onrender.com', 'booking-app-062v.onrender.com', '127.0.0.1']
 
 
 # Application definition
@@ -129,12 +130,26 @@ WSGI_APPLICATION = 'booking_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
-    'default': {
+    'default': dj_database_url.parse(
+        os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True
+    )
+}
+
+if not os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
 
 
 # Password validation
