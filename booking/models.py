@@ -47,11 +47,11 @@ class Booking(models.Model):
     user_type = models.CharField(
         max_length=20, 
         choices=USER_TYPE_CHOICES, 
-        default='individual'
+        default='individual',
     )
-    full_name = models.CharField(max_length=200)  # Full name for both individuals and businesses
-    account_number = models.CharField(max_length=15)  # Optional for individuals
-    phone_number = models.CharField(max_length=15)  # Required for both
+    full_name = models.CharField(max_length=200, null=True)  # Full name for both individuals and businesses
+    account_number = models.CharField(max_length=15, null=True)  # Optional for individuals
+    phone_number = models.CharField(max_length=15, null=True)  # Required for both
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, null=True)
     manual_branch = models.CharField(max_length=100, null=True, blank=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
@@ -67,11 +67,11 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.branch} - {self.service} at {self.date} {self.time}"
     
-    def save(self, *args, **kwargs):
-        # Ensure account_number is filled for both individuals and businesses
-        if not self.account_number:
-            raise ValueError("Account number is required for all users.")
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     # Ensure account_number is filled for both individuals and businesses
+    #     if not self.account_number:
+    #         raise ValueError("Account number is required for all users.")
+    #     super().save(*args, **kwargs)
 
 
 class TimeSlot(models.Model):

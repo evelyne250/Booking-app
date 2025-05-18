@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.timezone import localtime
 from .Recommendation import recommend_options  
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 def book_appointment(request):
@@ -92,6 +93,7 @@ def book_appointment(request):
     # Render the form and recommendations (if any) for GET requests or unhandled POST requests
     return render(request, 'booking/index.html', {'form': form, 'recommendations': recommendations})
 
+@csrf_exempt
 def get_recommendations(request):
     if request.method == 'POST':
         service_id = request.POST.get('service')  # Get the service ID
@@ -111,20 +113,25 @@ def get_recommendations(request):
             return JsonResponse({'error': 'Service ID is missing.'}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@csrf_exempt
 def confirm(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             
             form_data = {
-                'name': data.get('name'),
+                'full_name': data.get('full_name'),
                 'email': data.get('email'),
+                'phone_number': data.get('phone_number'),
+                'account_number': data.get('account_number', ''),
                 'branch': data.get('branch'),
                 'manual_branch': data.get('manual_branch', ''),
                 'service': data.get('service'),
                 'date': data.get('date'),
                 'time': data.get('time'),
-                'customer_type': data.get('customer_type')
+                'customer_type': data.get('customer_type'),
+                'business_name': data.get('business_name', ''),
+                'user_type': data.get('user_type')
             }
             
             form = BookingForm(form_data)

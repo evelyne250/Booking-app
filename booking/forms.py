@@ -7,9 +7,9 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils.timezone import make_aware
 class CustomLoginForm(forms.Form):
-    full_name = forms.CharField(max_length=200, required=True, label="Full Name")
-    account_number = forms.CharField(max_length=50, required=True, label="Account Number")
-    phone_number = forms.CharField(max_length=15, required=True, label="Phone Number")
+    full_name = forms.CharField(max_length=200,  label="Full Name")
+    account_number = forms.CharField(max_length=50, label="Account Number")
+    phone_number = forms.CharField(max_length=15, label="Phone Number")
 
 class CustomerUploadForm(forms.Form):
     file = forms.FileField(label="Upload CSV File")
@@ -37,13 +37,16 @@ class BookingForm(forms.ModelForm):
     customer_type = forms.ChoiceField(choices=CUSTOMER_TYPE_CHOICES, required=True)
     user_type = forms.ChoiceField(
         choices=USER_TYPE_CHOICES, 
-        required=True,
     )
     business_name = forms.CharField(
         max_length=100, 
         required=False, 
         label='Business Name'
     )
+    account_number = forms.CharField(max_length=100, required=False, label='Account Number')
+    full_name = forms.CharField(max_length=100, required=True, label='Full Name')
+    phone_number = forms.CharField(max_length=20, required=True, label='Phone Number')
+    email = forms.EmailField(required=True, label='Email')
 
     class Meta:
         model = Booking
@@ -56,7 +59,9 @@ class BookingForm(forms.ModelForm):
             'date',
             'time',
             'customer_type',
-            'business_name',]
+            'business_name',
+            'email',
+            'manual_branch']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -67,6 +72,8 @@ class BookingForm(forms.ModelForm):
         time = cleaned_data.get("time")
         user_type = cleaned_data.get("user_type")
         business_name = cleaned_data.get("business_name")
+        customer_type = cleaned_data.get("customer_type")
+        account_number = cleaned_data.get("account_number")
 
         if not branch and not manual_branch:
             raise forms.ValidationError("Please select a branch or enter a branch name.")
