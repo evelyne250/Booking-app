@@ -139,7 +139,7 @@ WSGI_APPLICATION = 'booking_project.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.parse(
-        'postgresql://booking_mthc_user:E5qq6rg7g3EGmrzV3pKdvHdcLk8iG7Wf@dpg-d0cfb3p5pdvs73bisij0-a.oregon-postgres.render.com/booking_mthc',
+        'postgresql://booking_rb8t_user:YabljTSbg5bPNl0o0Ojvk8FYeSBoLslg@dpg-d15uteggjchc73fssevg-a.oregon-postgres.render.com/booking_rb8t',
         conn_max_age=600,
         conn_health_checks=True
     )
